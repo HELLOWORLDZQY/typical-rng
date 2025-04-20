@@ -1,75 +1,46 @@
--- 主模块结构 (保存为 main.lua)
 return function()
-    -- 版本控制系统
-    local CURRENT_VERSION = "1.2.0"
-    local VERSION_CHECK_URL = "https://raw.githubusercontent.com/你的用户名/THE-HACK-/main/version.txt"
-
-    -- 依赖加载系统
-    local function LoadDependencies()
-        local OrionLib = loadstring(game:HttpGet('https://pastebin.com/raw/WRUyYTdY'))()
-        return OrionLib
-    end
-
-    -- 配置管理系统
-    local ConfigManager = {
-        Defaults = {
-            AutoClick = { Enabled = false, Interval = 0.1 },
-            Movement = { WalkSpeed = 16, JumpPower = 50 },
-            AntiAFK = { Enabled = false }
-        }
+    local OrionLib = loadstring(game:HttpGet('https://pastebin.com/raw/WRUyYTdY'))()
+    
+    -- 配置系统
+    local Config = {
+        AutoClick = { Enabled = false, Interval = 0.1 },
+        Movement = { WalkSpeed = 16, JumpPower = 50 },
+        AntiAFK = { Enabled = false }
     }
 
-    function ConfigManager:Load()
-        return OrionLib:GetConfig("MainConfig") or self.Defaults
-    end
-
-    function ConfigManager:Save(config)
-        OrionLib:SaveConfig("MainConfig", config)
+    -- 输入验证
+    local function ValidateInput(input, min, max)
+        local num = tonumber(input)
+        return num and math.clamp(num, min, max) or min
     end
 
     -- 核心功能模块
-    local CoreModules = {
-        AutoClicker = {
-            Active = false,
-            Interval = 0.1,
-            Runner = function(self)
-                while task.wait(self.Interval) do
-                    if not self.Active then continue end
-                    -- 点击逻辑
-                end
-            end
-        },
-        PlayerController = {
-            ApplyMovement = function(walkspeed, jumppower)
-                pcall(function()
-                    local humanoid = game.Players.LocalPlayer.Character.Humanoid
-                    humanoid.WalkSpeed = walkspeed
-                    humanoid.JumpPower = jumppower
-                end)
-            end
-        },
-        AntiAFK = {
-            Active = false,
-            Runner = function(self)
-                while task.wait(30) do
-                    if self.Active then
-                        -- 反AFK逻辑
+    local function AutoClicker()
+        while task.wait(Config.AutoClick.Interval) do
+            if not Config.AutoClick.Enabled then continue end
+            pcall(function()
+                for _, model in pairs(workspace.Sanses:GetChildren()) do
+                    local hitbox = model:FindFirstChild("ClickHitbox")
+                    if hitbox and hitbox:FindFirstChildOfClass("ClickDetector") then
+                        fireclickdetector(hitbox:FindFirstChildOfClass("ClickDetector"))
                     end
                 end
-            end
-        }
-    }
-
-    -- 版本检查
-    local function VersionCheck()
-        local success, response = pcall(function()
-            return game:HttpGet(VERSION_CHECK_URL)
-        end)
-        return success and response == CURRENT_VERSION
+            end)
+        end
     end
 
-    -- UI构建系统
-    local function BuildUI(OrionLib, config)
+    local function AntiAFKSystem()
+        while task.wait(30) do
+            if Config.AntiAFK.Enabled then
+                pcall(function()
+                    game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+                end)
+            end
+        end
+    end
+
+    -- GUI初始化
+    local function Init()
         local Window = OrionLib:MakeWindow({
             Name = "Typical RNG",
             HidePremium = false,
@@ -78,46 +49,97 @@ return function()
         })
 
         -- 主控制标签页
-        local MainTab = Window:MakeTab({ Name = "Main Controls" })
-        
+        local MainTab = Window:MakeTab({Name = "Main Controls"})
         MainTab:AddToggle({
-            Name = "Auto Click",
-            Default = config.AutoClick.Enabled,
-            Callback = function(value)
-                CoreModules.AutoClicker.Active = value
-                config.AutoClick.Enabled = value
+            Name = "Auto Click Toggle",
+            Default = false,
+            Callback = function(v) 
+                Config.AutoClick.Enabled = v 
             end
         })
 
-        -- 其他UI组件...
-    end
+        local ClickSlider = MainTab:AddSlider({
+            Name = "Click Interval (seconds)",
+            Min = 0.05,
+            Max = 1.0,
+            Default = 0.1,
+            Increment = 0.05,
+            Callback = function(v) 
+                Config.AutoClick.Interval = v
+            end
+        })
 
-    -- 主初始化流程
-    local function Main()
-        if not VersionCheck() then
-            warn("发现新版本，请更新脚本！")
-            return
-        end
+        MainTab:AddTextbox({
+            Name = "Manual Input Interval",
+            Default = "0.1",
+            Callback = function(text)
+                local value = ValidateInput(text, 0.05, 1.0)
+                ClickSlider:Set(value)
+            end
+        })
 
-        local OrionLib = LoadDependencies()
-        local config = ConfigManager:Load()
+        -- 玩家属性标签页
+        local PlayerTab = Window:MakeTab({Name = "Player Properties"})
+        local WalkSlider = PlayerTab:AddSlider({
+            Name = "Walk Speed",
+            Min = 16,
+            Max = 250,
+            Default = 16,
+            Increment = 1,
+            Callback = function(v)
+                pcall(function()
+                    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
+                end)
+            end
+        })
 
-        BuildUI(OrionLib, config)
+        PlayerTab:AddTextbox({
+            Name = "Input Walk Speed",
+            Default = "16",
+            Callback = function(text)
+                local value = ValidateInput(text, 16, 250)
+                WalkSlider:Set(value)
+            end
+        })
+
+        local JumpSlider = PlayerTab:AddSlider({
+            Name = "Jump Power",
+            Min = 50,
+            Max = 500,
+            Default = 50,
+            Increment = 5,
+            Callback = function(v)
+                pcall(function()
+                    game.Players.LocalPlayer.Character.Humanoid.JumpPower = v
+                end)
+            end
+        })
+
+        PlayerTab:AddTextbox({
+            Name = "Input Jump Power",
+            Default = "50",
+            Callback = function(text)
+                local value = ValidateInput(text, 50, 500)
+                JumpSlider:Set(value)
+            end
+        })
+
+        -- 系统功能标签页
+        local SystemTab = Window:MakeTab({Name = "System Features"})
+        SystemTab:AddToggle({
+            Name = "Anti-AFK System",
+            Default = false,
+            Callback = function(v) 
+                Config.AntiAFK.Enabled = v 
+            end
+        })
+
+        -- 启动功能
+        task.spawn(AutoClicker)
+        task.spawn(AntiAFKSystem)
         OrionLib:Init()
-
-        -- 启动核心模块
-        task.spawn(CoreModules.AutoClicker.Runner, CoreModules.AutoClicker)
-        task.spawn(CoreModules.AntiAFK.Runner, CoreModules.AntiAFK)
-
-        -- 配置保存钩子
-        game:GetService("Players").LocalPlayer.CharacterRemoving:Connect(function()
-            ConfigManager:Save(config)
-        end)
     end
 
-    -- 安全启动
-    local success, err = pcall(Main)
-    if not success then
-        warn("脚本初始化失败: "..tostring(err))
-    end
+    -- 执行初始化
+    Init()
 end
