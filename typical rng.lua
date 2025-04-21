@@ -12,6 +12,9 @@ local Config = {
     },
     AntiAFK = {
         Enabled = false
+    },
+    GodMode = {
+        Enabled = false
     }
 }
 
@@ -22,6 +25,36 @@ local Window = OrionLib:MakeWindow({
     SaveConfig = true,
     ConfigFolder = "TypicalRNG_Config"
 })
+
+-- God Mode Variables
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local GodModeConnection = nil
+
+-- God Mode Core Function
+local function ToggleGodMode(state)
+    Config.GodMode.Enabled = state
+    
+    if GodModeConnection then
+        GodModeConnection:Disconnect()
+        GodModeConnection = nil
+    end
+
+    if state then
+        GodModeConnection = RunService.Stepped:Connect(function()
+            if LocalPlayer.Character then
+                for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                        part.CanTouch = false
+                        part.CanQuery = false
+                    end
+                end
+            end
+        end)
+    end
+end
 
 -- Input Validation Function
 local function ValidateInput(input, min, max)
@@ -153,6 +186,16 @@ local function InitUI()
             Config.AntiAFK.Enabled = v 
         end
     })
+
+    -- Added God Mode Toggle
+    SystemTab:AddToggle({
+        Name = "God Mode (No Collision)",
+        Default = false,
+        Callback = function(v)
+            Config.GodMode.Enabled = v
+            ToggleGodMode(v)
+        end
+    })
 end
 
 -- Initialization Process --
@@ -160,3 +203,14 @@ InitUI()
 task.spawn(AutoClicker)
 task.spawn(AntiAFKSystem)
 OrionLib:Init()
+
+-- Cleanup on script termination
+game:GetService("UserInputService").WindowFocused:Connect(function()
+    if not Config.GodMode.Enabled then
+        ToggleGodMode(false)
+    end
+end)
+
+game:GetService("Players").LocalPlayer.CharacterRemoving:Connect(function()
+    ToggleGodMode(false)
+end)
