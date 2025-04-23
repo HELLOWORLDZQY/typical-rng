@@ -20,7 +20,7 @@ local Window = OrionLib:MakeWindow({
     SaveConfig = true,
     ConfigFolder = "TypicalRNG_Config",
     IntroEnabled = true,
-    IntroText = "Powered by Enhanced System"
+    IntroText = "Powered by idk fr"
 })
 
 local function ValidateInput(input, min, max, default)
