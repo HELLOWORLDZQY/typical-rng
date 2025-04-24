@@ -20,7 +20,7 @@ local Window = OrionLib:MakeWindow({
     SaveConfig = true,
     ConfigFolder = "TypicalRNG_Config",
     IntroEnabled = true,
-    IntroText = "Powered by idk fr"
+    IntroText = "Powered by ererer"
 })
 
 local function ValidateInput(input, min, max, default)
@@ -253,7 +253,8 @@ local function Initialize()
         end
     end)
     task.spawn(function()
-        while task.wait(math.random(25,35)) do
+        -- 唯一修改部分：将随机间隔改为固定30秒
+        while task.wait(30) do
             if Config.AntiAFK.Enabled then
                 pcall(function() VirtualUser:ClickButton2(Vector2.new()) end)
             end
