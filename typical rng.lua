@@ -216,7 +216,7 @@ local function UpdateButtonCache()
         
         local function SearchRecursive(parent)
             for _, child in ipairs(parent:GetChildren()) do
-                if child:IsA("MeshPart") and child.Name == "FightButton" then
+                if child:IsA("UnionOperation") and child.Name == "FightButton" then
                     local transmitter = child:FindFirstChildOfClass("TouchTransmitter")
                     if transmitter then
                         table.insert(fightButtonCache.buttons, {
