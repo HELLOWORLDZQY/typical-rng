@@ -1,7 +1,7 @@
 local EnableBlacklist = true
 
 local blacklist = {
-     7930622116
+     4835485705
 }
 
 local Players = game:GetService("Players")
@@ -10,7 +10,7 @@ local LocalPlayer = Players.LocalPlayer
 if EnableBlacklist then
     for _, userId in ipairs(blacklist) do
         if LocalPlayer.UserId == userId then
-            LocalPlayer:Kick("You have been banned.")
+            LocalPlayer:Kick("hacker")
             while true do task.wait() end 
         end
     end
