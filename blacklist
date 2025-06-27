@@ -1,7 +1,8 @@
 local EnableBlacklist = true
 
 local blacklist = {
-     4835485705
+     4835485705,
+     7930622116
 }
 
 local Players = game:GetService("Players")
